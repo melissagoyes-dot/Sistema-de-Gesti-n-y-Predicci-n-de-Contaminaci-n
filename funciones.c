@@ -735,7 +735,7 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     {
         printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->co2 > 1000.0f ? "Evacuacion preventiva de tuneles viales y pasos a desnivel." : "Activacion de corredores peatonales exclusivos y desvios de trafico.");
     }
-    char *estadoTemp = obtenerEstadoPorTipo(medicion->temperatura, 30.0f, 3);
+    const char *estadoTemp = obtenerEstadoPorTipo(medicion->temperatura, 30.0f, 3);
     printf("\n- Temperatura: %.2f C | Estado: %s%s%s [Rango Seguro: 12.0 C - 25.0 C]\n",
            medicion->temperatura, obtenerColorPorEstado(estadoTemp), estadoTemp, "\033[0m");
     if (strcmp(estadoTemp, "Normal") != 0)
@@ -749,10 +749,9 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
             printf("  \033[1;34mRecomendacion (Frio Extremo):\033[0m Riesgo de hipotermia. Monitorear calefaccion en centros de asistencia y habilitar albergues nocturnos para personas vulnerables.\n");
         }
     }
-    char *estadoViento = obtenerEstadoPorTipo(medicion->velocidadViento, 10.0f, 4);
+    const char *estadoViento = obtenerEstadoPorTipo(medicion->velocidadViento, 10.0f, 4);
     printf("\n- Viento: %.2f km/h | Estado: %s%s%s [Rango Seguro: 10.0 km/h - 40.0 km/h]\n",
            medicion->velocidadViento, obtenerColorPorEstado(estadoViento), estadoViento, "\033[0m");
-           
     if (strcmp(estadoViento, "Normal") != 0)
     {
         if (medicion->velocidadViento > 40.0f)
@@ -764,10 +763,9 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
             printf("  \033[1;33mRecomendacion (Viento Debil):\033[0m Estancamiento del aire. Prohibicion estricta de quemas agricolas y uso de maquinaria a combustion para evitar acumulacion de smog.\n");
         }
     }
-    char *estadoHum = obtenerEstadoPorTipo(medicion->humedad, 70.0f, 5);
+    const char *estadoHum = obtenerEstadoPorTipo(medicion->humedad, 70.0f, 5);
     printf("\n- Humedad: %.2f %% | Estado: %s%s%s [Rango Seguro: 40%% - 70%%]\n",
-           medicion->humedad, obtenerColorPorEstado(estadoHum), estadoHum, "\033[0m");
-           
+           medicion->humedad, obtenerColorPorEstado(estadoHum), estadoHum, "\033[0m");  
     if (strcmp(estadoHum, "Normal") != 0)
     {
         if (medicion->humedad > 70.0f)
@@ -932,10 +930,10 @@ void mostrarReporte()
         printf("%-22s %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f\n",
                zonas[i].nombre, prom.co2, prom.so2, prom.no2, prom.pm25, prom.temperatura, prom.humedad, prom.velocidadViento);
     }
-    fprintf(reporte, "\n\n===== TABLA 2: DATOS INGRESADOS HOY (TERMINAL) =====\n");
+    fprintf(reporte, "\n\n===== TABLA 2: DATOS INGRESADOS HOY=====\n");
     fprintf(reporte, "%-22s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s\n", "Zona", "CO2", "SO2", "NO2", "PM2.5", "Temp", "Hum", "Viento", "Alertas");
     fprintf(reporte, "-------------------------------------------------------------------------------------------------\n");
-    printf("\n\n\033[1;36m===== TABLA 2: DATOS INGRESADOS HOY (TERMINAL) =====\033[0m\n");
+    printf("\n\n\033[1;36m===== TABLA 2: DATOS INGRESADOS HOY=====\033[0m\n");
     printf("\033[1;34m%-22s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s\033[0m\n", "Zona", "CO2", "SO2", "NO2", "PM2.5", "Temp", "Hum", "Viento", "Alertas");
     printf("-------------------------------------------------------------------------------------------------\n");
     for (int i = 0; i < cantidadZonas; i++)
@@ -1029,7 +1027,7 @@ void generarBaseDatosMock()
         }
     }
     guardarArchivos();
-    printf("\n\033[1;33m[INFO]\033[0m Base de datos de Quito inicializada con variaciones atmosfericas reales. Quedan \033[1;36m%d\033[0m espacios libres para nuevas zonas.\n", MAX_ZONAS - cantidadZonas);
+    printf("\n\033[1;33m[INFO]\033[0m Base de Datos inicializada. Quedan \033[1;36m%d\033[0m espacios libres para nuevas zonas.\n", MAX_ZONAS - cantidadZonas);
 }
 
 void cerrarDia()
