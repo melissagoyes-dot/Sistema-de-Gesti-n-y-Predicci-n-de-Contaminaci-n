@@ -391,7 +391,8 @@ void administrarZonas()
 void registrarZona()
 {
     char nombre[50];
-    int index,opc;
+    int index, opc, valido;
+
     if (cantidadZonas >= MAX_ZONAS)
     {
         printf("\033[1;31mNo hay espacio para registrar mas zonas.\033[0m\n");
@@ -399,15 +400,34 @@ void registrarZona()
     }
     do
     {
-        printf("\033[1;36mIngrese el nombre unico de la zona\033[0m\n");
+        valido = 1; 
+        printf("\033[1;36mIngrese el nombre unico de la zona (solo letras y espacios)\033[0m\n");
         leerCadena(nombre, sizeof(nombre));
+        if(strlen(nombre) == 0){
+            valido = 0;
+        }
+        for (int i = 0; nombre[i] != '\0'; i++)
+        {
+            if (!isalpha((unsigned char)nombre[i]) && nombre[i] != ' ')
+            {
+                valido = 0;
+                break; 
+            }
+        }
+        if (!valido)
+        {
+            printf("\n\033[1;31mERROR: EL NOMBRE SOLO DEBE CONTENER LETRAS Y ESPACIOS. VUELVA A INTENTARLO.\033[0m\n");
+            index = 0;
+            continue;
+        }
         convertirMinusculas(nombre);
         index = buscarZonaPorNombre(nombre);
         if (index != -1)
         {
             printf("\n\033[1;31mERROR: SE HA INGRESADO UN NOMBRE YA REGISTRADO ANTERIORMENTE, POR FAVOR VUELVA A INTENTARLO\033[0m\n");
         }
-    } while (index != -1);
+    } while (index != -1 || !valido);
+
     printf("\n\033[1;33mEl nombre de la nueva zona es: '%s'.\033[0m\n", nombre);
     printf("\033[1;31mDespues de que se guarde no vas a poder cambiar el nombre.\033[0m\n");
     printf("¿Deseas guardar esta nueva zona? (1=Si / 2=No): ");
