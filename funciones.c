@@ -932,7 +932,6 @@ void mostrarReporte() {
     }
 
     fclose(reporte);
-    printf("\n\033[1;32m[EXITO] Reporte generado correctamente en 'reporte.txt'\033[0m\n");
 }
 
 void generarBaseDatosMock() {
