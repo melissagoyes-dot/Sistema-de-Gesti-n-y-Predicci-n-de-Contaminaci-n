@@ -85,8 +85,7 @@ void limpiarSaltoDeLinea(char *cadena)
     if (cadena == NULL)
     {
         return;
-    }
-    {
+    }else{
         cadena[strcspn(cadena, "\n")] = '\0';
     }
 }
@@ -168,7 +167,8 @@ int obtenerPromedioHistoricoZona(char *zonaNombre, Medicion *promedio)
             cantidadPorZona++;
         }
     }
-    if (cantidadPorZona == 0){
+    if (cantidadPorZona == 0)
+    {
         return 0;
     }
     limite = (cantidadPorZona < 30) ? cantidadPorZona : 30;
@@ -282,11 +282,11 @@ void guardarArchivos()
 
 const char *obtenerEstado(float valor, float limite)
 {
-    if (valor <= limite * 0.50f)
+    if (valor <= limite * 0.50)
     {
         return "Normal";
     }
-    if (valor <= limite * 0.85f)
+    if (valor <= limite * 0.85)
     {
         return "Precaucion";
     }
@@ -302,27 +302,27 @@ const char *obtenerEstadoPorTipo(float valor, float limite, int tipo)
     switch (tipo)
     {
     case 3:
-        if (valor >= 12.0f && valor <= 25.0f)
+        if (valor >= 12.0 && valor <= 25.0)
             return "Normal";
-        if ((valor > 25.0f && valor <= 30.0f) || (valor >= 5.0f && valor < 12.0f))
+        if ((valor > 25.0 && valor <= 30.0) || (valor >= 5.0 && valor < 12.0))
             return "Precaucion";
-        if ((valor > 30.0f && valor <= 35.0f) || (valor >= 0.0f && valor < 5.0f))
+        if ((valor > 30.0 && valor <= 35.0) || (valor >= 0.0 && valor < 5.0))
             return "Alerta";
         return "Critica";
     case 4:
-        if (valor >= 10.0f && valor <= 40.0f)
+        if (valor >= 10.0 && valor <= 40.0)
             return "Normal";
-        if ((valor >= 5.0f && valor < 10.0f) || (valor > 40.0f && valor <= 60.0f))
+        if ((valor >= 5.0 && valor < 10.0) || (valor > 40.0 && valor <= 60.0))
             return "Precaucion";
-        if ((valor >= 2.0f && valor < 5.0f) || (valor > 60.0f && valor <= 80.0f))
+        if ((valor >= 2.0 && valor < 5.0) || (valor > 60.0 && valor <= 80.0))
             return "Alerta";
         return "Critica";
     case 5:
-        if (valor >= 40.0f && valor <= 70.0f)
+        if (valor >= 40.0 && valor <= 70.0)
             return "Normal";
-        if ((valor > 70.0f && valor <= 80.0f) || (valor >= 30.0f && valor < 40.0f))
+        if ((valor > 70.0 && valor <= 80.0) || (valor >= 30.0 && valor < 40.0))
             return "Precaucion";
-        if ((valor > 80.0f && valor <= 90.0f) || (valor >= 20.0f && valor < 30.0f))
+        if ((valor > 80.0 && valor <= 90.0) || (valor >= 20.0 && valor < 30.0))
             return "Alerta";
         return "Critica";
     default:
@@ -400,28 +400,30 @@ void registrarZona()
     }
     do
     {
-        valido = 1; 
+        valido = 1;
         printf("\033[1;36mIngrese el nombre unico de la zona (solo letras y espacios)\033[0m\n");
         leerCadena(nombre, sizeof(nombre));
-        if(strlen(nombre) == 0){
+        if (strlen(nombre) == 0)
+        {
             valido = 0;
         }
         for (int i = 0; nombre[i] != '\0'; i++)
         {
-            if (!isalpha((unsigned char)nombre[i]) && nombre[i] != ' ')
+            if (!isalpha((unsigned char)nombre[i]) && nombre[i] != ' ') // isalpha verifica que sea una letra
             {
                 valido = 0;
-                break; 
+                break;
             }
         }
         if (!valido)
         {
             printf("\n\033[1;31mERROR: EL NOMBRE SOLO DEBE CONTENER LETRAS Y ESPACIOS. VUELVA A INTENTARLO.\033[0m\n");
             index = 0;
-            continue;
+        }else
+        {
+            convertirMinusculas(nombre);
+            index = buscarZonaPorNombre(nombre);
         }
-        convertirMinusculas(nombre);
-        index = buscarZonaPorNombre(nombre);
         if (index != -1)
         {
             printf("\n\033[1;31mERROR: SE HA INGRESADO UN NOMBRE YA REGISTRADO ANTERIORMENTE, POR FAVOR VUELVA A INTENTARLO\033[0m\n");
@@ -456,7 +458,7 @@ void listarZonas()
     printf("+------------------------+\n");
     for (int i = 0; i < cantidadZonas; i++)
     {
-        printf("| %-22s |\n", zonas[i].nombre);
+        printf("| %-22s |\n", zonas[i].nombre); //-22 significa alinear a la izquierda con un ancho de 22 caracteres
     }
     printf("+------------------------+\n");
 }
@@ -464,7 +466,7 @@ void listarZonas()
 void registrarMedicion()
 {
     char nombreZona[50];
-    int indiceZona,tipoMedicion,indiceActual,opc,indiceHistorico,indiceGuardar,esReemplazo = 0,opc2;
+    int indiceZona, tipoMedicion, indiceActual, opc, indiceHistorico, indiceGuardar, esReemplazo = 0, opc2;
     if (cantidadZonas == 0)
     {
         printf("\033[1;31mDebe registrar al menos una zona antes de ingresar mediciones.\033[0m\n");
@@ -676,18 +678,18 @@ void predecirContaminacion()
     }
     if (encontrados > 0)
     {
-        basePm25 = ((sumaPm25 / encontrados) * 0.6f) + (medicion->pm25 * 0.4f);
-        baseNo2 = ((sumaNo2 / encontrados) * 0.6f) + (medicion->no2 * 0.4f);
-        baseSo2 = ((sumaSo2 / encontrados) * 0.6f) + (medicion->so2 * 0.4f);
-        baseCo2 = ((sumaCo2 / encontrados) * 0.6f) + (medicion->co2 * 0.4f);
+        basePm25 = ((sumaPm25 / encontrados) * 0.6) + (medicion->pm25 * 0.4);
+        baseNo2 = ((sumaNo2 / encontrados) * 0.6) + (medicion->no2 * 0.4);
+        baseSo2 = ((sumaSo2 / encontrados) * 0.6) + (medicion->so2 * 0.4);
+        baseCo2 = ((sumaCo2 / encontrados) * 0.6) + (medicion->co2 * 0.4);
     }
-    predPm25 = basePm25 + (medicion->temperatura * 0.05f) - (medicion->humedad * 0.01f) + (10.0f - medicion->velocidadViento) * 0.08f;
-    predNo2 = baseNo2 + (medicion->temperatura * 0.03f) + (10.0f - medicion->velocidadViento) * 0.05f;
-    predSo2 = baseSo2 + (medicion->temperatura * 0.04f) + (medicion->humedad * 0.005f);
-    predCo2 = baseCo2 + (medicion->temperatura * 0.02f) + (10.0f - medicion->velocidadViento) * 0.05f;
-    predTemp = medicion->temperatura + (medicion->humedad > 70.0f ? 0.5f : 0.0f) - (medicion->velocidadViento > 10.0f ? 0.4f : 0.0f);
-    predHum = medicion->humedad + (predTemp - medicion->temperatura) * 0.15f;
-    predViento = medicion->velocidadViento - (medicion->humedad > 80.0f ? 0.6f : 0.0f) + (medicion->temperatura > 20.0f ? 0.7f : 0.0f);
+    predPm25 = basePm25 + (medicion->temperatura * 0.05) - (medicion->humedad * 0.01) + (10.0 - medicion->velocidadViento) * 0.08;
+    predNo2 = baseNo2 + (medicion->temperatura * 0.03) + (10.0 - medicion->velocidadViento) * 0.05;
+    predSo2 = baseSo2 + (medicion->temperatura * 0.04) + (medicion->humedad * 0.005);
+    predCo2 = baseCo2 + (medicion->temperatura * 0.02) + (10.0 - medicion->velocidadViento) * 0.05;
+    predTemp = medicion->temperatura + (medicion->humedad > 70.0 ? 0.5 : 0.0) - (medicion->velocidadViento > 10.0 ? 0.4 : 0.0);
+    predHum = medicion->humedad + (predTemp - medicion->temperatura) * 0.15;
+    predViento = medicion->velocidadViento - (medicion->humedad > 80.0 ? 0.6 : 0.0) + (medicion->temperatura > 20.0 ? 0.7 : 0.0);
     printf("\n\033[1;34mPrediccion para las proximas 24 horas en la zona %s (Aplicando Promedio Ponderado)\033[0m\n", nombreZona);
     printf("\033[1;36m%-12s %-12s %-12s\033[0m\n", "Indicador", "Valor previsto", "Estado");
     printf("----------------------------------------\n");
@@ -712,19 +714,19 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     printf("- PM2.5: %.2f ug/m3 | Estado: %s%s%s [Limite Seguro: 0.1 - %.1f ug/m3]\n",
            medicion->pm25, obtenerColorPorEstado(obtenerEstado(medicion->pm25, LIMITE_PM25)),
            obtenerEstado(medicion->pm25, LIMITE_PM25), "\033[0m", LIMITE_PM25);
-    if (medicion->pm25 <= 0.0f)
+    if (medicion->pm25 <= 0.0)
     {
         printf("  \033[1;33mFallo de Sensor:\033[0m Valor irrealmente bajo, naturalmente no se podria dar este valor. Enviar cuadrilla tecnica para limpiar o recalibrar el sensor de particulas.\n");
     }
     else if (strcmp(obtenerEstado(medicion->pm25, LIMITE_PM25), "Normal") != 0)
     {
-        printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->pm25 > 50.0f ? "Suspension de clases presenciales y prohibicion de circulacion de vehiculos pesados." : "Uso recomendado de mascarillas en grupos vulnerables y reduccion de aforo en parques.");
+        printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->pm25 > 50.0 ? "Suspension de clases presenciales y prohibicion de circulacion de vehiculos pesados." : "Uso recomendado de mascarillas en grupos vulnerables y reduccion de aforo en parques.");
     }
     printf("\n- NO2: %.2f ug/m3 | Estado: %s%s%s [Limite Seguro: 0.1 - %.1f ug/m3]\n",
            medicion->no2, obtenerColorPorEstado(obtenerEstado(medicion->no2, LIMITE_NO2)),
            obtenerEstado(medicion->no2, LIMITE_NO2), "\033[0m", LIMITE_NO2);
-           
-    if (medicion->no2 <= 0.0f)
+
+    if (medicion->no2 <= 0.0)
     {
         printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m Lectura nula de gases, naturalmente no se podria dar este valor. Revisar conexiones electricas de la estacion de monitoreo.\n");
     }
@@ -735,66 +737,66 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     printf("\n- SO2: %.2f ug/m3 | Estado: %s%s%s [Limite Seguro: 0.1 - %.1f ug/m3]\n",
            medicion->so2, obtenerColorPorEstado(obtenerEstado(medicion->so2, LIMITE_SO2)),
            obtenerEstado(medicion->so2, LIMITE_SO2), "\033[0m", LIMITE_SO2);
-           
-    if (medicion->so2 <= 0.0f)
+
+    if (medicion->so2 <= 0.0)
     {
-        printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m Posible obstruccion en el filtro de toma de aire del sensor de azufre, naturalmente no se podria dar este valor. Reemplazar repuesto.\n");
+        printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m Posible obstruccion en el filtro de toma de aire del sensor de azufre, naturalmente no se podria dar este valor. Reemplazar repuesto\n");
     }
     else if (strcmp(obtenerEstado(medicion->so2, LIMITE_SO2), "Normal") != 0)
     {
-        printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->so2 > 125.0f ? "Clausura temporal de plantas industriales emisoras y advertencia de lluvia acida." : "Alerta a hospitales por incremento de problemas respiratorios e inspeccion de industrias.");
+        printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->so2 > 125.0f ? "Clausura temporal de plantas industriales emisoras y advertencia de lluvia acida" : "Alerta a hospitales por incremento de problemas respiratorios e inspeccion de industrias");
     }
     printf("\n- CO2: %.2f ppm | Estado: %s%s%s [Limite Seguro: 350.0 - %.1f ppm]\n",
            medicion->co2, obtenerColorPorEstado(obtenerEstado(medicion->co2, LIMITE_CO2)),
-           obtenerEstado(medicion->co2, LIMITE_CO2), "\033[0m", LIMITE_CO2);  
-    if (medicion->co2 < 350.0f)
+           obtenerEstado(medicion->co2, LIMITE_CO2), "\033[0m", LIMITE_CO2);
+    if (medicion->co2 < 350.0)
     {
-        printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m El nivel de CO2 es inferior al fondo natural global terrestre, naturalmente no se podria dar este valor. Recalibrar sensor infrarrojo inmediatamente.\n");
+        printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m El nivel de CO2 es inferior al fondo natural global terrestre, naturalmente no se podria dar este valor Recalibrar sensor infrarrojo inmediatamente\n");
     }
     else if (strcmp(obtenerEstado(medicion->co2, LIMITE_CO2), "Normal") != 0)
     {
-        printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->co2 > 1000.0f ? "Evacuacion preventiva de tuneles viales y pasos a desnivel." : "Activacion de corredores peatonales exclusivos y desvios de trafico.");
+        printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->co2 > 1000.0 ? "Evacuacion preventiva de tuneles viales y pasos a desnivel" : "Activacion de corredores peatonales exclusivos y desvios de trafico");
     }
     const char *estadoTemp = obtenerEstadoPorTipo(medicion->temperatura, 30.0f, 3);
     printf("\n- Temperatura: %.2f C | Estado: %s%s%s [Rango Seguro: 12.0 C - 25.0 C]\n",
            medicion->temperatura, obtenerColorPorEstado(estadoTemp), estadoTemp, "\033[0m");
     if (strcmp(estadoTemp, "Normal") != 0)
     {
-        if (medicion->temperatura > 25.0f)
+        if (medicion->temperatura > 25.0)
         {
-            printf("  \033[1;33mRecomendacion (Calor Extremo):\033[0m Riesgo de golpe de calor. Suspender actividades fisicas intensas al aire libre y mantener hidratacion constante en centros educativos.\n");
+            printf("  \033[1;33mRecomendacion (Calor Extremo):\033[0m Riesgo de golpe de calor. Suspender actividades fisicas intensas al aire libre y mantener hidratacion constante en centros educativos\n");
         }
         else
         {
-            printf("  \033[1;34mRecomendacion (Frio Extremo):\033[0m Riesgo de hipotermia. Monitorear calefaccion en centros de asistencia y habilitar albergues nocturnos para personas vulnerables.\n");
+            printf("  \033[1;34mRecomendacion (Frio Extremo):\033[0m Riesgo de hipotermia. Monitorear calefaccion en centros de asistencia y habilitar albergues nocturnos para personas vulnerables\n");
         }
     }
-    const char *estadoViento = obtenerEstadoPorTipo(medicion->velocidadViento, 10.0f, 4);
+    const char *estadoViento = obtenerEstadoPorTipo(medicion->velocidadViento, 10.0, 4);
     printf("\n- Viento: %.2f km/h | Estado: %s%s%s [Rango Seguro: 10.0 km/h - 40.0 km/h]\n",
            medicion->velocidadViento, obtenerColorPorEstado(estadoViento), estadoViento, "\033[0m");
     if (strcmp(estadoViento, "Normal") != 0)
     {
-        if (medicion->velocidadViento > 40.0f)
+        if (medicion->velocidadViento > 40.0)
         {
-            printf("  \033[1;31mRecomendacion (Viento Fuerte):\033[0m Riesgo de desprendimiento de estructuras. Retirar objetos sueltos de balcones y evitar transitar cerca de vallas publicitarias.\n");
+            printf("  \033[1;31mRecomendacion (Viento Fuerte):\033[0m Riesgo de desprendimiento de estructuras. Retirar objetos sueltos de balcones y evitar transitar cerca de vallas publicitarias\n");
         }
         else
         {
-            printf("  \033[1;33mRecomendacion (Viento Debil):\033[0m Estancamiento del aire. Prohibicion estricta de quemas agricolas y uso de maquinaria a combustion para evitar acumulacion de smog.\n");
+            printf("  \033[1;33mRecomendacion (Viento Debil):\033[0m Estancamiento del aire. Prohibicion estricta de quemas agricolas y uso de maquinaria a combustion para evitar acumulacion de smog\n");
         }
     }
-    const char *estadoHum = obtenerEstadoPorTipo(medicion->humedad, 70.0f, 5);
+    const char *estadoHum = obtenerEstadoPorTipo(medicion->humedad, 70.0, 5);
     printf("\n- Humedad: %.2f %% | Estado: %s%s%s [Rango Seguro: 40%% - 70%%]\n",
-           medicion->humedad, obtenerColorPorEstado(estadoHum), estadoHum, "\033[0m");  
+           medicion->humedad, obtenerColorPorEstado(estadoHum), estadoHum, "\033[0m");
     if (strcmp(estadoHum, "Normal") != 0)
     {
         if (medicion->humedad > 70.0f)
         {
-            printf("  \033[1;34mRecomendacion (Humedad Alta):\033[0m Mayor percepcion termica y proliferacion de moho. Asegurar ventilacion mecanica en interiores y reducir aforos en espacios cerrados.\n");
+            printf("  \033[1;34mRecomendacion (Humedad Alta):\033[0m Mayor percepcion termica y proliferacion de moho. Asegurar ventilacion mecanica en interiores y reducir aforos en espacios cerrados\n");
         }
         else
         {
-            printf("  \033[1;33mRecomendacion (Humedad Baja):\033[0m Aire muy seco que irrita vias respiratorias y multiplica riesgo de incendios. Activar riego preventivo en parques y recomendar uso de humidificadores.\n");
+            printf("  \033[1;33mRecomendacion (Humedad Baja):\033[0m Aire muy seco que irrita vias respiratorias y multiplica riesgo de incendios. Activar riego preventivo en parques y recomendar uso de humidificadores\n");
         }
     }
 }
@@ -802,10 +804,10 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
 void mostrarAlertas()
 {
     char nombreZona[50];
-     int indiceZona;
+    int indiceZona;
     if (cantidadZonas == 0)
     {
-        printf("\033[1;31mNo hay zonas registradas para evaluar alertas.\033[0m\n");
+        printf("\033[1;31mNo hay zonas registradas para evaluar alertas\033[0m\n");
         return;
     }
     listarZonas();
@@ -814,12 +816,12 @@ void mostrarAlertas()
     indiceZona = buscarZonaPorNombre(nombreZona);
     if (indiceZona == -1)
     {
-        printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
+        printf("\033[1;31mNo se encontro la zona indicada\033[0m\n");
         return;
     }
     if (obtenerMedicionActualPorZona(nombreZona) == NULL)
     {
-        printf("\033[1;31mNo hay mediciones actuales registradas para %s para el dia actual. Ingrese una medicion nueva para evaluar alertas y recomendaciones.\033[0m\n", nombreZona);
+        printf("\033[1;31mNo hay mediciones actuales registradas para %s para el dia actual. Ingrese una medicion nueva para evaluar alertas y recomendaciones\033[0m\n", nombreZona);
         return;
     }
     mostrarDetalleAlertasZona(nombreZona);
@@ -828,11 +830,11 @@ void mostrarAlertas()
 void calcularPromedioHistorico()
 {
     char nombreZona[50];
-    int indiceZona,cantidadPorZona = 0,limite = 0,contador = 0;
-    float promPm25 = 0.0, promNo2 = 0.0, promSo2 = 0.0, promCo2 = 0.0,promTemp = 0.0, promHum = 0.0, promViento = 0.0;
+    int indiceZona, cantidadPorZona = 0, limite = 0, contador = 0;
+    float promPm25 = 0.0, promNo2 = 0.0, promSo2 = 0.0, promCo2 = 0.0, promTemp = 0.0, promHum = 0.0, promViento = 0.0;
     if (cantidadMediciones == 0)
     {
-        printf("\033[1;31mNo existen mediciones para calcular promedios.\033[0m\n");
+        printf("\033[1;31mNo existen mediciones para calcular promedios\033[0m\n");
         return;
     }
     listarZonas();
@@ -841,7 +843,7 @@ void calcularPromedioHistorico()
     indiceZona = buscarZonaPorNombre(nombreZona);
     if (indiceZona == -1)
     {
-        printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
+        printf("\033[1;31mNo se encontro la zona indicada\033[0m\n");
         return;
     }
     for (int i = 0; i < cantidadMediciones; i++)
@@ -853,12 +855,12 @@ void calcularPromedioHistorico()
     }
     if (cantidadPorZona == 0)
     {
-        printf("\033[1;31mNo hay mediciones para esa zona.\033[0m\n");
+        printf("\033[1;31mNo hay mediciones para esa zona\033[0m\n");
         return;
     }
     if (cantidadPorZona < 30)
     {
-        printf("\033[1;33mNo existen suficientes registros para calcular el promedio de los ultimos 30 dias.\033[0m\n");
+        printf("\033[1;33mNo existen suficientes registros para calcular el promedio de los ultimos 30 dias\033[0m\n");
         printf("Se utilizara la cantidad disponible: \033[1;36m%d\033[0m\n", cantidadPorZona);
     }
     limite = (cantidadPorZona < 30) ? cantidadPorZona : 30;
@@ -920,13 +922,13 @@ void mostrarReporte()
     int dias, hayDatosActuales = 0, cantidadAlertas;
     if (cantidadZonas == 0)
     {
-        printf("\033[1;31mNo hay zonas registradas para generar un reporte.\033[0m\n");
+        printf("\033[1;31mNo hay zonas registradas para generar un reporte\033[0m\n");
         return;
     }
     FILE *reporte = fopen("reporte.txt", "w");
     if (reporte == NULL)
     {
-        printf("\033[1;31mNo se pudo crear el archivo reporte.txt\033[0m\n");
+        printf("\033[1;31mNo se pudo crear el archivo reporte\033[0m\n");
         return;
     }
     fprintf(reporte, "\n===== TABLA 1: PROMEDIOS HISTORICOS (ULTIMOS 30 DIAS) =====\n");
@@ -943,12 +945,14 @@ void mostrarReporte()
         {
             fprintf(reporte, "%-22s %-8s %-8s %-8s %-8s %-8s %-8s %-8s\n", zonas[i].nombre, "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A");
             printf("%-22s %-8s %-8s %-8s %-8s %-8s %-8s %-8s\n", zonas[i].nombre, "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A");
-            continue;
         }
-        fprintf(reporte, "%-22s %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f\n",
-                zonas[i].nombre, prom.co2, prom.so2, prom.no2, prom.pm25, prom.temperatura, prom.humedad, prom.velocidadViento);
-        printf("%-22s %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f\n",
-               zonas[i].nombre, prom.co2, prom.so2, prom.no2, prom.pm25, prom.temperatura, prom.humedad, prom.velocidadViento);
+        else
+        {
+            fprintf(reporte, "%-22s %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f\n",
+                    zonas[i].nombre, prom.co2, prom.so2, prom.no2, prom.pm25, prom.temperatura, prom.humedad, prom.velocidadViento);
+            printf("%-22s %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f %-8.2f\n",
+                   zonas[i].nombre, prom.co2, prom.so2, prom.no2, prom.pm25, prom.temperatura, prom.humedad, prom.velocidadViento);
+        }
     }
     fprintf(reporte, "\n\n===== TABLA 2: DATOS INGRESADOS HOY=====\n");
     fprintf(reporte, "%-22s %-8s %-8s %-8s %-8s %-8s %-8s %-8s %-8s\n", "Zona", "CO2", "SO2", "NO2", "PM2.5", "Temp", "Hum", "Viento", "Alertas");
@@ -973,8 +977,8 @@ void mostrarReporte()
     }
     if (!hayDatosActuales)
     {
-        fprintf(reporte, "No se han registrado mediciones el dia de hoy.\n");
-        printf("\033[1;33mNo se han registrado mediciones el dia de hoy.\033[0m\n");
+        fprintf(reporte, "No se han registrado mediciones el dia de hoy\n");
+        printf("\033[1;33mNo se han registrado mediciones el dia de hoy\033[0m\n");
     }
     fclose(reporte);
 }
@@ -986,6 +990,7 @@ void generarBaseDatosMock()
     cantidadZonas = 0;
     cantidadMediciones = 0;
     cantidadActuales = 0;
+    float base_co2, base_so2, base_no2, base_pm25, base_temp, base_viento, base_humedad;
     char nombresZonas[9][50] = {
         "eugenio espejo", "centro historico", "eloy alfaro",
         "quitumbe", "la delicia", "calderon",
@@ -1001,40 +1006,40 @@ void generarBaseDatosMock()
         for (int dia = 1; dia <= 5; dia++)
         {
             strcpy(mediciones[cantidadMediciones].zonaNombre, zonas[z].nombre);
-            float base_co2 = 410.0f + (dia * 2.0f);
-            float base_so2 = 10.0f + dia;
-            float base_no2 = 30.0f + dia;
-            float base_pm25 = 15.0f + (dia * 0.5f);
-            float base_temp = 14.0f + dia;
-            float base_viento = 8.0f;
-            float base_humedad = 60.0f;
+            base_co2 = 410.0 + (dia * 2.0);
+            base_so2 = 10.0 + dia;
+            base_no2 = 30.0 + dia;
+            base_pm25 = 15.0 + (dia * 0.5);
+            base_temp = 14.0 + dia;
+            base_viento = 8.0;
+            base_humedad = 60.0;
             if (strcmp(zonas[z].nombre, "centro historico") == 0 || strcmp(zonas[z].nombre, "eugenio espejo") == 0)
             {
-                base_no2 += 80.0f;
-                base_viento = 4.0f;
+                base_no2 += 80.0; // suben los niveles de NO2 (simulando tráfico) y baja el viento.
+                base_viento = 4.0;
             }
             else if (strcmp(zonas[z].nombre, "quitumbe") == 0 || strcmp(zonas[z].nombre, "eloy alfaro") == 0)
             {
-                base_so2 += 70.0f;
-                base_pm25 += 20.0f;
+                base_so2 += 70.0; // zonas más industriales o de alto tráfico pesado
+                base_pm25 += 20.0;
             }
             else if (strcmp(zonas[z].nombre, "calderon") == 0)
             {
-                base_pm25 += 25.0f;
-                base_humedad = 40.0f;
-                base_viento = 15.0f;
+                base_pm25 += 25.0;
+                base_humedad = 40.0;
+                base_viento = 15.0;
             }
             else if (strcmp(zonas[z].nombre, "cumbaya") == 0 || strcmp(zonas[z].nombre, "valle de los chillos") == 0)
             {
-                base_temp += 5.0f;
-                base_co2 += 150.0f;
+                base_temp += 5.0;
+                base_co2 += 150.0;
             }
             else if (strcmp(zonas[z].nombre, "choco andino") == 0)
             {
-                base_no2 = 5.0f;
-                base_so2 = 2.0f;
-                base_pm25 = 8.0f;
-                base_humedad = 85.0f;
+                base_no2 = 5.0; // los valores de contaminación son bajísimos y la humedad es alta (simulando un área verde natural)
+                base_so2 = 2.0;
+                base_pm25 = 8.0;
+                base_humedad = 85.0;
             }
             mediciones[cantidadMediciones].co2 = base_co2;
             mediciones[cantidadMediciones].so2 = base_so2;
@@ -1047,19 +1052,19 @@ void generarBaseDatosMock()
         }
     }
     guardarArchivos();
-    printf("\n\033[1;33m[INFO]\033[0m Base de Datos inicializada. Quedan \033[1;36m%d\033[0m espacios libres para nuevas zonas.\n", MAX_ZONAS - cantidadZonas);
+    printf("\n\033[1;33m[INFO]\033[0m Base de Datos inicializada. Quedan \033[1;36m%d\033[0m espacios libres para nuevas zonas\n", MAX_ZONAS - cantidadZonas);
 }
 
 void cerrarDia()
 {
-    int opc;
+    int opc,procesadas = 0;
     if (cantidadActuales == 0)
     {
-        printf("\n\033[1;33m[INFO]\033[0m No hay mediciones actuales registradas el dia de hoy para cerrar.\n");
+        printf("\n\033[1;33m[INFO]\033[0m No hay mediciones actuales registradas el dia de hoy para cerrar\n");
         return;
     }
     printf("\n\033[1;36m¿Esta seguro que desea Cerrar el Dia?\033[0m\n");
-    printf("Esto tomara todas las mediciones actuales, las guardara en el historial y preparara el sistema para manana.\n");
+    printf("Esto tomara todas las mediciones actuales, las guardara en el historial y preparara el sistema para manana\n");
     printf("(1=Si / 2=No): ");
     opc = validarEnteroConRango(1, 2);
     if (opc == 2)
@@ -1068,12 +1073,11 @@ void cerrarDia()
         return;
     }
     printf("\n\033[1;34mIniciando cierre del dia...\033[0m\n");
-    int procesadas = 0;
     for (int i = 0; i < cantidadActuales; i++)
     {
         if (cantidadMediciones >= MAX_MEDICIONES)
         {
-            printf("\n\033[1;33m[ADVERTENCIA]\033[0m La base de datos historica esta llena. No se pudieron guardar todas las mediciones.\n");
+            printf("\n\033[1;33m[ADVERTENCIA]\033[0m La base de datos historica esta llena. No se pudieron guardar todas las mediciones\n");
             break;
         }
         strcpy(mediciones[cantidadMediciones].zonaNombre, medicionActual[i].zonaNombre);
@@ -1089,6 +1093,6 @@ void cerrarDia()
     }
     cantidadActuales = 0;
     guardarArchivos();
-    printf("\033[1;32m[EXITO]\033[0m Se ha cerrado el dia correctamente. \033[1;36m%d\033[0m mediciones pasaron al historial.\n", procesadas);
-    printf("El sistema ahora esta limpio y listo para registrar las mediciones de un nuevo dia.\n");
+    printf("\033[1;32m[EXITO]\033[0m Se ha cerrado el dia correctamente. \033[1;36m%d\033[0m mediciones pasaron al historial\n", procesadas);
+    printf("El sistema ahora esta limpio y listo para registrar las mediciones de un nuevo dia :D\n");
 }
