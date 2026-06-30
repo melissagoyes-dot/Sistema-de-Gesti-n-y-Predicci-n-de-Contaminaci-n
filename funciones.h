@@ -35,6 +35,7 @@ int menu();
 void administrarZonas();
 void registrarZona();
 void listarZonas();
+void eliminarZona();
 void registrarMedicion();
 void monitorearContaminacion();
 void predecirContaminacion();

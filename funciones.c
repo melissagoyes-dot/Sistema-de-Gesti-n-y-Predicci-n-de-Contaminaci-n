@@ -369,9 +369,10 @@ void administrarZonas()
         printf("\n\033[1;36m===== ADMINISTRAR ZONAS =====\033[0m\n");
         printf("1. Registrar zona\n");
         printf("2. Mostrar zonas\n");
-        printf("3. Volver\n");
+        printf("3. Eliminar zona\n");
+        printf("4. Volver\n");
         printf("\033[1;33mSeleccione una opcion:\033[0m ");
-        opc = validarEnteroConRango(1, 3);
+        opc = validarEnteroConRango(1, 4);
 
         switch (opc)
         {
@@ -382,10 +383,13 @@ void administrarZonas()
             listarZonas();
             break;
         case 3:
+            eliminarZona();
+            break;
+        case 4:
             printf("\033[1;32mVolviendo al menu principal...\033[0m\n");
             break;
         }
-    } while (opc != 3);
+    } while (opc != 4);
 }
 
 void registrarZona()
@@ -590,6 +594,73 @@ void registrarMedicion()
             printf("\n\033[1;32m[EXITO]\033[0m Medicion HISTORICA anadida a la base de datos correctamente.\n");
         }
     }
+}
+
+void eliminarZona()
+{
+    char nombre[50];
+    int indiceZona, opc;
+    if (cantidadZonas == 0)
+    {
+        printf("\033[1;31mNo hay zonas registradas para eliminar.\033[0m\n");
+        return;
+    }
+    listarZonas();
+    printf("\n\033[1;36mIngrese el nombre de la zona que desea ELIMINAR:\033[0m\n");
+    leerCadena(nombre, sizeof(nombre));
+    convertirMinusculas(nombre);
+    indiceZona = buscarZonaPorNombre(nombre);
+    if (indiceZona == -1)
+    {
+        printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
+        return;
+    }
+    printf("\n\033[1;31m[ADVERTENCIA PELIGROSA]\033[0m Estas a punto de eliminar la zona '%s'.\n", zonas[indiceZona].nombre);
+    printf("Esto borrara de forma permanente la zona y TODAS sus mediciones historicas y actuales.\n");
+    printf("¿Estas totalmente seguro? (1=Si, borrar todo / 2=No, cancelar): ");
+    opc = validarEnteroConRango(1, 2);
+    if (opc == 2)
+    {
+        printf("\033[1;32mOperacion cancelada. La zona esta a salvo.\033[0m\n");
+        return;
+    }
+    for (int i = indiceZona; i < cantidadZonas - 1; i++)
+    {
+        zonas[i] = zonas[i + 1];
+    }
+    cantidadZonas--;
+    for (int i = 0; i < cantidadMediciones; )
+    {
+        if (strcmp(mediciones[i].zonaNombre, nombre) == 0)
+        {
+            for (int j = i; j < cantidadMediciones - 1; j++)
+            {
+                mediciones[j] = mediciones[j + 1];
+            }
+            cantidadMediciones--;
+        }
+        else
+        {
+            i++;
+        }
+    }
+    for (int i = 0; i < cantidadActuales; )
+    {
+        if (strcmp(medicionActual[i].zonaNombre, nombre) == 0)
+        {
+            for (int j = i; j < cantidadActuales - 1; j++)
+            {
+                medicionActual[j] = medicionActual[j + 1];
+            }
+            cantidadActuales--;
+        }
+        else
+        {
+            i++;
+        }
+    }
+    guardarArchivos();
+    printf("\n\033[1;32m[EXITO]\033[0m La zona '%s' y todos sus registros fueron eliminados correctamente del sistema.\n", nombre);
 }
 
 void monitorearContaminacion()
