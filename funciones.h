@@ -50,7 +50,6 @@ void convertirMinusculas(char *cadena);
 int validarEnteroConRango(int a, int b);
 float validarFloatConRango(int a, int b);
 int buscarZonaPorNombre(char *nombre);
-int buscarZonaPorTitulo(char *titulo);
 int buscarMedicionPorZona(char *zonaNombre);
 int buscarMedicionActualPorZona(char *zonaNombre);
 int obtenerUltimaMedicionZona(char *zonaNombre);

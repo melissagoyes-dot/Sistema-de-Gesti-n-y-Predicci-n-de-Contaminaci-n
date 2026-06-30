@@ -6,12 +6,9 @@ int main() {
     if (cantidadZonas == 0 && cantidadMediciones == 0) {
         generarBaseDatosMock();
     }
-
     int opc;
-    
     do { 
         opc = menu();
-
         switch (opc) {
             case 1:
                 administrarZonas();
@@ -42,7 +39,6 @@ int main() {
                 break;
         }
     } while (opc!= 9);
-
     guardarArchivos();
     return 0;
 }

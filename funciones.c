@@ -11,222 +11,6 @@ int cantidadMediciones = 0;
 int cantidadActuales = 0;
 Medicion medicionPromedioTemporal;
 
-int buscarZonaPorTitulo(char *titulo)
-{
-    if (titulo == NULL)
-    {
-        return -1;
-    }
-    convertirMinusculas(titulo);
-    for (int i = 0; i < cantidadZonas; i++)
-    {
-        if (strcmp(zonas[i].nombre, titulo) == 0)
-            return i;
-    }
-    return -1;
-}
-
-void limpiarSaltoDeLinea(char *cadena)
-{
-    if (cadena == NULL)
-    {
-        return;
-    }
-    int longitud = (int)strlen(cadena);
-    while (longitud > 0 && (cadena[longitud - 1] == '\n' || cadena[longitud - 1] == '\r'))
-    {
-        cadena[--longitud] = '\0';
-    }
-}
-
-int menu()
-{
-    int opc;
-    printf("\n\033[1;36m===== SISTEMA DE GESTION Y PREDICCION DE CONTAMINACION =====\033[0m\n");
-    printf("1. Administrar zonas\n");
-    printf("2. Registrar nueva medicion\n");
-    printf("3. Monitorear contaminacion actual\n");
-    printf("4. Predecir contaminacion (24 horas)\n");
-    printf("5. Alertas y recomendaciones\n");
-    printf("6. Calcular promedio historico\n");
-    printf("7. Generar reporte\n");
-    printf("8. Cerrar el dia (Pasar datos de hoy al historial)\n");
-    printf("\033[1;31m9. Salir\033[0m\n");
-    printf("\033[1;33mSeleccione una opcion:\033[0m ");
-    opc = validarEnteroConRango(1, 9);
-    return opc;
-}
-
-int buscarMedicionPorZona(char *zonaNombre)
-{
-    if (zonaNombre == NULL)
-    {
-        return -1;
-    }
-    convertirMinusculas(zonaNombre);
-    for (int i = cantidadMediciones - 1; i >= 0; i--)
-    {
-        if (strcmp(mediciones[i].zonaNombre, zonaNombre) == 0)
-        {
-            return i;
-        }
-    }
-    return -1;
-}
-
-int obtenerUltimaMedicionZona(char *zonaNombre)
-{
-    return buscarMedicionPorZona(zonaNombre);
-}
-int buscarMedicionActualPorZona(char *zonaNombre) {
-    if (zonaNombre == NULL) return -1;
-    convertirMinusculas(zonaNombre);
-    for (int i = 0; i < cantidadActuales; i++) {
-        if (strcmp(medicionActual[i].zonaNombre, zonaNombre) == 0) return i;
-    }
-    return -1;
-}
-
-Medicion *obtenerMedicionActualPorZona(char *zonaNombre)
-{
-    int indice = buscarMedicionActualPorZona(zonaNombre);
-    if (indice == -1)
-    {
-        return NULL;
-    }
-    return &medicionActual[indice];
-}
-
-int obtenerPromedioHistoricoZona(char *zonaNombre, Medicion *promedio)
-{
-    int contador = 0;
-    int cantidadPorZona = 0;
-
-    for (int i = 0; i < cantidadMediciones; i++)
-    {
-        if (strcmp(mediciones[i].zonaNombre, zonaNombre) == 0)
-        {
-            cantidadPorZona++;
-        }
-    }
-
-    if (cantidadPorZona == 0)
-        return 0;
-
-    int limite = (cantidadPorZona < 30) ? cantidadPorZona : 30;
-
-    memset(promedio, 0, sizeof(Medicion));
-    strcpy(promedio->zonaNombre, zonaNombre);
-
-    for (int i = cantidadMediciones - 1; i >= 0 && contador < limite; i--)
-    {
-        if (strcmp(mediciones[i].zonaNombre, zonaNombre) == 0)
-        {
-            promedio->co2 += mediciones[i].co2;
-            promedio->so2 += mediciones[i].so2;
-            promedio->no2 += mediciones[i].no2;
-            promedio->pm25 += mediciones[i].pm25;
-            promedio->temperatura += mediciones[i].temperatura;
-            promedio->humedad += mediciones[i].humedad;
-            promedio->velocidadViento += mediciones[i].velocidadViento;
-            contador++;
-        }
-    }
-
-    if (contador > 0)
-    {
-        promedio->co2 /= contador;
-        promedio->so2 /= contador;
-        promedio->no2 /= contador;
-        promedio->pm25 /= contador;
-        promedio->temperatura /= contador;
-        promedio->humedad /= contador;
-        promedio->velocidadViento /= contador;
-    }
-
-    return contador;
-}
-
-Medicion *obtenerMedicionParaOpcion(char *zonaNombre, int *usandoHistorico)
-{
-    Medicion *actual = obtenerMedicionActualPorZona(zonaNombre);
-    if (actual != NULL)
-    {
-        if (usandoHistorico != NULL)
-            *usandoHistorico = 0;
-        return actual;
-    }
-    int dias = obtenerPromedioHistoricoZona(zonaNombre, &medicionPromedioTemporal);
-    if (dias == 0)
-    {
-        printf("\n\033[1;31mERROR: Actualmente no se ha registrado medicion y tampoco hay datos historicos para la zona %s.\033[0m\n", zonaNombre);
-        if (usandoHistorico != NULL)
-            *usandoHistorico = 0;
-        return NULL;
-    }
-    printf("\n\033[1;33mActualmente no se ha registrado medicion hoy.\n¿Quieres usar el PROMEDIO HISTORICO guardado (%d dias) para ejecutar esta opcion? (1=Si / 2=No):\033[0m ", dias);
-    int opcion = validarEnteroConRango(1, 2);
-    if (opcion == 1)
-    {
-        if (usandoHistorico != NULL)
-            *usandoHistorico = 1;
-        return &medicionPromedioTemporal;
-    }
-    if (usandoHistorico != NULL)
-        *usandoHistorico = 0;
-    return NULL;
-}
-
-void cargarArchivos()
-{
-    FILE *archivoZonas = fopen("zonas.dat", "rb");
-    if (archivoZonas != NULL)
-    {
-        if (fread(&cantidadZonas, sizeof(int), 1, archivoZonas) == 1)
-        {
-            fread(zonas, sizeof(Zona), cantidadZonas, archivoZonas);
-        }
-        fclose(archivoZonas);
-    }
-    else
-    {
-        cantidadZonas = 0;
-    }
-
-    FILE *archivoMediciones = fopen("mediciones.dat", "rb");
-    if (archivoMediciones != NULL)
-    {
-        if (fread(&cantidadMediciones, sizeof(int), 1, archivoMediciones) == 1)
-        {
-            fread(mediciones, sizeof(Medicion), cantidadMediciones, archivoMediciones);
-        }
-        fclose(archivoMediciones);
-    }
-    else
-    {
-        cantidadMediciones = 0;
-    }
-}
-
-void guardarArchivos()
-{
-    FILE *archivoZonas = fopen("zonas.dat", "wb");
-    if (archivoZonas != NULL)
-    {
-        fwrite(&cantidadZonas, sizeof(int), 1, archivoZonas);
-        fwrite(zonas, sizeof(Zona), cantidadZonas, archivoZonas);
-        fclose(archivoZonas);
-    }
-
-    FILE *archivoMediciones = fopen("mediciones.dat", "wb");
-    if (archivoMediciones != NULL)
-    {
-        fwrite(&cantidadMediciones, sizeof(int), 1, archivoMediciones);
-        fwrite(mediciones, sizeof(Medicion), cantidadMediciones, archivoMediciones);
-        fclose(archivoMediciones);
-    }
-}
-
 void leerCadena(char *cadena, int n)
 {
     fgets(cadena, n, stdin);
@@ -290,11 +74,212 @@ int buscarZonaPorNombre(char *nombre)
     {
         if (strcmp(zonas[i].nombre, nombre) == 0)
         {
-            return i; // ¡Lo encontró :D!
+            return i;
         }
     }
-    return -1; // No lo encontró :c
+    return -1;
 }
+
+void limpiarSaltoDeLinea(char *cadena)
+{
+    if (cadena == NULL)
+    {
+        return;
+    }
+    {
+        cadena[strcspn(cadena, "\n")] = '\0';
+    }
+}
+
+int menu()
+{
+    int opc;
+    printf("\n\033[1;36m===== SISTEMA DE GESTION Y PREDICCION DE CONTAMINACION =====\033[0m\n");
+    printf("1. Administrar zonas\n");
+    printf("2. Registrar nueva medicion\n");
+    printf("3. Monitorear contaminacion actual\n");
+    printf("4. Predecir contaminacion (24 horas)\n");
+    printf("5. Alertas y recomendaciones\n");
+    printf("6. Calcular promedio historico\n");
+    printf("7. Generar reporte\n");
+    printf("8. Cerrar el dia (Pasar datos de hoy al historial)\n");
+    printf("\033[1;31m9. Salir\033[0m\n");
+    printf("\033[1;33mSeleccione una opcion:\033[0m ");
+    opc = validarEnteroConRango(1, 9);
+    return opc;
+}
+
+int buscarMedicionPorZona(char *zonaNombre)
+{
+    if (zonaNombre == NULL)
+    {
+        return -1;
+    }
+    convertirMinusculas(zonaNombre);
+    for (int i = cantidadMediciones - 1; i >= 0; i--)
+    {
+        if (strcmp(mediciones[i].zonaNombre, zonaNombre) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+int obtenerUltimaMedicionZona(char *zonaNombre)
+{
+    return buscarMedicionPorZona(zonaNombre);
+}
+
+int buscarMedicionActualPorZona(char *zonaNombre)
+{
+    if (zonaNombre == NULL)
+    {
+        return -1;
+    }
+    convertirMinusculas(zonaNombre);
+    for (int i = 0; i < cantidadActuales; i++)
+    {
+        if (strcmp(medicionActual[i].zonaNombre, zonaNombre) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+Medicion *obtenerMedicionActualPorZona(char *zonaNombre)
+{
+    int indice = buscarMedicionActualPorZona(zonaNombre);
+    if (indice == -1)
+    {
+        return NULL;
+    }
+    return &medicionActual[indice];
+}
+
+int obtenerPromedioHistoricoZona(char *zonaNombre, Medicion *promedio)
+{
+    int contador = 0, limite, cantidadPorZona = 0;
+    for (int i = 0; i < cantidadMediciones; i++)
+    {
+        if (strcmp(mediciones[i].zonaNombre, zonaNombre) == 0)
+        {
+            cantidadPorZona++;
+        }
+    }
+    if (cantidadPorZona == 0){
+        return 0;
+    }
+    limite = (cantidadPorZona < 30) ? cantidadPorZona : 30;
+    memset(promedio, 0, sizeof(Medicion));
+    strcpy(promedio->zonaNombre, zonaNombre);
+    for (int i = cantidadMediciones - 1; i >= 0 && contador < limite; i--)
+    {
+        if (strcmp(mediciones[i].zonaNombre, zonaNombre) == 0)
+        {
+            promedio->co2 += mediciones[i].co2;
+            promedio->so2 += mediciones[i].so2;
+            promedio->no2 += mediciones[i].no2;
+            promedio->pm25 += mediciones[i].pm25;
+            promedio->temperatura += mediciones[i].temperatura;
+            promedio->humedad += mediciones[i].humedad;
+            promedio->velocidadViento += mediciones[i].velocidadViento;
+            contador++;
+        }
+    }
+    if (contador > 0)
+    {
+        promedio->co2 /= contador;
+        promedio->so2 /= contador;
+        promedio->no2 /= contador;
+        promedio->pm25 /= contador;
+        promedio->temperatura /= contador;
+        promedio->humedad /= contador;
+        promedio->velocidadViento /= contador;
+    }
+    return contador;
+}
+
+Medicion *obtenerMedicionParaOpcion(char *zonaNombre, int *usandoHistorico)
+{
+    int dias, opc;
+    Medicion *actual = obtenerMedicionActualPorZona(zonaNombre);
+    if (actual != NULL)
+    {
+        if (usandoHistorico != NULL)
+            *usandoHistorico = 0;
+        return actual;
+    }
+    dias = obtenerPromedioHistoricoZona(zonaNombre, &medicionPromedioTemporal);
+    if (dias == 0)
+    {
+        printf("\n\033[1;31mERROR: Actualmente no se ha registrado medicion y tampoco hay datos historicos para la zona %s.\033[0m\n", zonaNombre);
+        if (usandoHistorico != NULL)
+            *usandoHistorico = 0;
+        return NULL;
+    }
+    printf("\n\033[1;33mActualmente no se ha registrado medicion hoy.\n¿Quieres usar el PROMEDIO HISTORICO guardado (%d dias) para ejecutar esta opcion? (1=Si / 2=No):\033[0m ", dias);
+    opc = validarEnteroConRango(1, 2);
+    if (opc == 1)
+    {
+        if (usandoHistorico != NULL)
+            *usandoHistorico = 1;
+        return &medicionPromedioTemporal;
+    }
+    if (usandoHistorico != NULL)
+        *usandoHistorico = 0;
+    return NULL;
+}
+
+void cargarArchivos()
+{
+    FILE *archivoZonas = fopen("zonas.dat", "rb");
+    if (archivoZonas != NULL)
+    {
+        if (fread(&cantidadZonas, sizeof(int), 1, archivoZonas) == 1)
+        {
+            fread(zonas, sizeof(Zona), cantidadZonas, archivoZonas);
+        }
+        fclose(archivoZonas);
+    }
+    else
+    {
+        cantidadZonas = 0;
+    }
+    FILE *archivoMediciones = fopen("mediciones.dat", "rb");
+    if (archivoMediciones != NULL)
+    {
+        if (fread(&cantidadMediciones, sizeof(int), 1, archivoMediciones) == 1)
+        {
+            fread(mediciones, sizeof(Medicion), cantidadMediciones, archivoMediciones);
+        }
+        fclose(archivoMediciones);
+    }
+    else
+    {
+        cantidadMediciones = 0;
+    }
+}
+
+void guardarArchivos()
+{
+    FILE *archivoZonas = fopen("zonas.dat", "wb");
+    if (archivoZonas != NULL)
+    {
+        fwrite(&cantidadZonas, sizeof(int), 1, archivoZonas);
+        fwrite(zonas, sizeof(Zona), cantidadZonas, archivoZonas);
+        fclose(archivoZonas);
+    }
+    FILE *archivoMediciones = fopen("mediciones.dat", "wb");
+    if (archivoMediciones != NULL)
+    {
+        fwrite(&cantidadMediciones, sizeof(int), 1, archivoMediciones);
+        fwrite(mediciones, sizeof(Medicion), cantidadMediciones, archivoMediciones);
+        fclose(archivoMediciones);
+    }
+}
+
 const char *obtenerEstado(float valor, float limite)
 {
     if (valor <= limite * 0.50f)
@@ -378,7 +363,7 @@ void mostrarZonasParaSeleccion()
 
 void administrarZonas()
 {
-    int opcion;
+    int opc;
     do
     {
         printf("\n\033[1;36m===== ADMINISTRAR ZONAS =====\033[0m\n");
@@ -386,9 +371,9 @@ void administrarZonas()
         printf("2. Mostrar zonas\n");
         printf("3. Volver\n");
         printf("\033[1;33mSeleccione una opcion:\033[0m ");
-        opcion = validarEnteroConRango(1, 3);
+        opc = validarEnteroConRango(1, 3);
 
-        switch (opcion)
+        switch (opc)
         {
         case 1:
             registrarZona();
@@ -400,34 +385,39 @@ void administrarZonas()
             printf("\033[1;32mVolviendo al menu principal...\033[0m\n");
             break;
         }
-    } while (opcion != 3);
+    } while (opc != 3);
 }
 
 void registrarZona()
 {
     char nombre[50];
-    int index;
-
+    int index,opc;
     if (cantidadZonas >= MAX_ZONAS)
     {
         printf("\033[1;31mNo hay espacio para registrar mas zonas.\033[0m\n");
         return;
     }
-
     do
     {
         printf("\033[1;36mIngrese el nombre unico de la zona\033[0m\n");
         leerCadena(nombre, sizeof(nombre));
         convertirMinusculas(nombre);
-        index = buscarZonaPorTitulo(nombre);
-
+        index = buscarZonaPorNombre(nombre);
         if (index != -1)
         {
             printf("\n\033[1;31mERROR: SE HA INGRESADO UN NOMBRE YA REGISTRADO ANTERIORMENTE, POR FAVOR VUELVA A INTENTARLO\033[0m\n");
         }
     } while (index != -1);
+    printf("\n\033[1;33mEl nombre de la nueva zona es: '%s'.\033[0m\n", nombre);
+    printf("\033[1;31mDespues de que se guarde no vas a poder cambiar el nombre.\033[0m\n");
+    printf("¿Deseas guardar esta nueva zona? (1=Si / 2=No): ");
+    opc = validarEnteroConRango(1, 2);
+    if (opc == 2)
+    {
+        printf("\033[1;31mRegistro de zona cancelado. No se guardaron los cambios.\033[0m\n");
+        return;
+    }
     strcpy(zonas[cantidadZonas].nombre, nombre);
-
     cantidadZonas++;
     guardarArchivos();
     printf("\033[1;32mZona registrada correctamente.\033[0m\n");
@@ -440,7 +430,6 @@ void listarZonas()
         printf("\033[1;31mNo hay zonas registradas.\033[0m\n");
         return;
     }
-
     printf("\n\033[1;34m===== ZONAS REGISTRADAS =====\033[0m\n");
     printf("+------------------------+\n");
     printf("| \033[1;36mNombre de la zona\033[0m      |\n");
@@ -455,6 +444,7 @@ void listarZonas()
 void registrarMedicion()
 {
     char nombreZona[50];
+    int indiceZona,tipoMedicion,indiceActual,opc,indiceHistorico,indiceGuardar,esReemplazo = 0,opc2;
     if (cantidadZonas == 0)
     {
         printf("\033[1;31mDebe registrar al menos una zona antes de ingresar mediciones.\033[0m\n");
@@ -464,30 +454,26 @@ void registrarMedicion()
     printf("\033[1;36mIngrese el nombre de la zona:\033[0m ");
     leerCadena(nombreZona, sizeof(nombreZona));
     convertirMinusculas(nombreZona);
-    int indiceZona = buscarZonaPorNombre(nombreZona);
-
+    indiceZona = buscarZonaPorNombre(nombreZona);
     if (indiceZona == -1)
     {
         printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
         return;
     }
-
     printf("\n\033[1;36m¿Que tipo de medicion desea registrar?\033[0m\n");
     printf("1. Medicion ACTUAL (Datos de hoy para monitoreo y alertas)\n");
     printf("2. Medicion HISTORICA (Datos pasados para engrosar el promedio)\n");
-    int tipoMedicion = validarEnteroConRango(1, 2);
-
+    tipoMedicion = validarEnteroConRango(1, 2);
     if (tipoMedicion == 1)
     {
-        int indiceActual = buscarMedicionActualPorZona(nombreZona);
-
+        indiceActual = buscarMedicionActualPorZona(nombreZona);
         if (indiceActual != -1)
         {
             printf("\n\033[1;33m[ALERTA DE SOBRESCRITURA]\033[0m Ya existe una medicion ACTUAL para '%s'.\n", nombreZona);
             printf("Si continuas, los datos ingresados hoy se van a reemplazar por los nuevos.\n");
             printf("¿Deseas continuar? (1=Si / 2=No): ");
-            int opcion = validarEnteroConRango(1, 2);
-            if (opcion == 2)
+            opc = validarEnteroConRango(1, 2);
+            if (opc == 2)
             {
                 printf("\033[1;31mOperacion cancelada.\033[0m\n");
                 return;
@@ -503,7 +489,6 @@ void registrarMedicion()
             indiceActual = cantidadActuales;
             cantidadActuales++;
         }
-
         strcpy(medicionActual[indiceActual].zonaNombre, nombreZona);
         printf("\n\033[1;34m--- INGRESANDO DATOS ACTUALES PARA %s ---\033[0m\n", nombreZona);
         printf("CO2 (ppm): ");
@@ -520,25 +505,21 @@ void registrarMedicion()
         medicionActual[indiceActual].humedad = validarFloatConRango(0, 100);
         printf("Velocidad del viento (km/h): ");
         medicionActual[indiceActual].velocidadViento = validarFloatConRango(0, 150);
-
         guardarArchivos();
         printf("\n\033[1;32m[EXITO]\033[0m Medicion ACTUAL registrada y guardada correctamente.\n");
     }
     else
     {
-        int indiceHistorico = buscarMedicionPorZona(nombreZona);
-        int indiceGuardar = cantidadMediciones;
-        int esReemplazo = 0;
-
+        indiceHistorico = buscarMedicionPorZona(nombreZona);
+        indiceGuardar = cantidadMediciones;
         if (indiceHistorico != -1)
         {
             printf("\n\033[1;33m[INFO]\033[0m Ya existen registros historicos para '%s'.\n", nombreZona);
             printf("¿Que accion deseas realizar?\n");
             printf("1. Agregar mediciones a los registros\n");
             printf("2. EDITAR/REEMPLAZAR el ultimo registro historico guardado\n");
-            int accion = validarEnteroConRango(1, 2);
-
-            if (accion == 2)
+            opc2 = validarEnteroConRango(1, 2);
+            if (opc2 == 2)
             {
                 printf("\n\033[1;33m[ALERTA DE SOBRESCRITURA]\033[0m Si continuas, los datos del ultimo registro historico de '%s' se van a reemplazar y actualizar.\n", nombreZona);
                 printf("¿Deseas continuar con el reemplazo? (1=Si / 2=No): ");
@@ -552,13 +533,11 @@ void registrarMedicion()
                 esReemplazo = 1;
             }
         }
-
         if (!esReemplazo && cantidadMediciones >= MAX_MEDICIONES)
         {
             printf("\033[1;31mLa base de datos historica esta llena (Max: %d).\033[0m\n", MAX_MEDICIONES);
             return;
         }
-
         strcpy(mediciones[indiceGuardar].zonaNombre, nombreZona);
         printf("\n\033[1;34m--- INGRESANDO REGISTRO HISTORICO PARA %s ---\033[0m\n", nombreZona);
         printf("CO2 (ppm): ");
@@ -575,14 +554,11 @@ void registrarMedicion()
         mediciones[indiceGuardar].humedad = validarFloatConRango(0, 100);
         printf("Velocidad del viento (km/h): ");
         mediciones[indiceGuardar].velocidadViento = validarFloatConRango(0, 150);
-
         if (!esReemplazo)
         {
             cantidadMediciones++;
         }
-
         guardarArchivos();
-
         if (esReemplazo)
         {
             printf("\n\033[1;32m[EXITO]\033[0m Medicion HISTORICA reemplazada y actualizada correctamente.\n");
@@ -597,7 +573,7 @@ void registrarMedicion()
 void monitorearContaminacion()
 {
     char nombreZona[50];
-    int indiceZona,usandoHistorico=0 ;
+    int indiceZona, usandoHistorico = 0;
     if (cantidadZonas == 0)
     {
         printf("\033[1;31mNo hay zonas registradas para monitorear.\033[0m\n");
@@ -637,8 +613,8 @@ void monitorearContaminacion()
 void predecirContaminacion()
 {
     char nombreZona[50];
-    int indiceZona, usandoHistorico=0, encontrados = 0;
-    float basePm25,baseNo2, baseSo2,baseCo2,sumaPm25 = 0, sumaNo2 = 0, sumaSo2 = 0, sumaCo2 = 0,predPm25,predNo2,predSo2,predCo2,predTemp,predHum,predViento;
+    int indiceZona, usandoHistorico = 0, encontrados = 0;
+    float basePm25, baseNo2, baseSo2, baseCo2, sumaPm25 = 0, sumaNo2 = 0, sumaSo2 = 0, sumaCo2 = 0, predPm25, predNo2, predSo2, predCo2, predTemp, predHum, predViento;
     if (cantidadZonas == 0)
     {
         printf("\033[1;31mNo hay zonas registradas para predecir.\033[0m\n");
@@ -706,16 +682,11 @@ void predecirContaminacion()
 
 void mostrarDetalleAlertasZona(char *zonaNombre)
 {
-    int usandoHistorico = 0;
-    Medicion *medicion = obtenerMedicionParaOpcion(zonaNombre, &usandoHistorico);
+    Medicion *medicion = obtenerMedicionActualPorZona(zonaNombre);
     if (medicion == NULL)
     {
-        printf("\033[1;31mNo hay una medicion disponible para evaluar alertas en la zona %s.\033[0m\n", zonaNombre);
+        printf("\033[1;31mNo hay una medicion actual disponible para evaluar alertas en la zona %s.\033[0m\n", zonaNombre);
         return;
-    }
-    if (usandoHistorico)
-    {
-        printf("\033[1;33mSe esta usando el historial guardado para esta opcion.\033[0m\n");
     }
     printf("\n\033[1;31m===== DETALLE DE ALERTAS Y RECOMENDACIONES - %s =====\033[0m\n", zonaNombre);
     printf("- PM2.5: %.2f ug/m3 | Estado: %s%s%s [Limite Seguro: 0.1 - %.1f ug/m3]\n",
@@ -732,6 +703,7 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     printf("\n- NO2: %.2f ug/m3 | Estado: %s%s%s [Limite Seguro: 0.1 - %.1f ug/m3]\n",
            medicion->no2, obtenerColorPorEstado(obtenerEstado(medicion->no2, LIMITE_NO2)),
            obtenerEstado(medicion->no2, LIMITE_NO2), "\033[0m", LIMITE_NO2);
+           
     if (medicion->no2 <= 0.0f)
     {
         printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m Lectura nula de gases, naturalmente no se podria dar este valor. Revisar conexiones electricas de la estacion de monitoreo.\n");
@@ -740,10 +712,10 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     {
         printf("  \033[1;31mRecomendacion (Polucion Alta):\033[0m %s\n", medicion->no2 > 200.0f ? "Cierre temporal de vias principales y activacion estricta de Pico y Placa todo el dia." : "Promocion de teletrabajo al 50%% en empresas del sector para reducir trafico.");
     }
-
     printf("\n- SO2: %.2f ug/m3 | Estado: %s%s%s [Limite Seguro: 0.1 - %.1f ug/m3]\n",
            medicion->so2, obtenerColorPorEstado(obtenerEstado(medicion->so2, LIMITE_SO2)),
            obtenerEstado(medicion->so2, LIMITE_SO2), "\033[0m", LIMITE_SO2);
+           
     if (medicion->so2 <= 0.0f)
     {
         printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m Posible obstruccion en el filtro de toma de aire del sensor de azufre, naturalmente no se podria dar este valor. Reemplazar repuesto.\n");
@@ -754,7 +726,7 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     }
     printf("\n- CO2: %.2f ppm | Estado: %s%s%s [Limite Seguro: 350.0 - %.1f ppm]\n",
            medicion->co2, obtenerColorPorEstado(obtenerEstado(medicion->co2, LIMITE_CO2)),
-           obtenerEstado(medicion->co2, LIMITE_CO2), "\033[0m", LIMITE_CO2);
+           obtenerEstado(medicion->co2, LIMITE_CO2), "\033[0m", LIMITE_CO2);  
     if (medicion->co2 < 350.0f)
     {
         printf("  \033[1;33mRecomendacion (Fallo de Sensor):\033[0m El nivel de CO2 es inferior al fondo natural global terrestre, naturalmente no se podria dar este valor. Recalibrar sensor infrarrojo inmediatamente.\n");
@@ -780,6 +752,7 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     char *estadoViento = obtenerEstadoPorTipo(medicion->velocidadViento, 10.0f, 4);
     printf("\n- Viento: %.2f km/h | Estado: %s%s%s [Rango Seguro: 10.0 km/h - 40.0 km/h]\n",
            medicion->velocidadViento, obtenerColorPorEstado(estadoViento), estadoViento, "\033[0m");
+           
     if (strcmp(estadoViento, "Normal") != 0)
     {
         if (medicion->velocidadViento > 40.0f)
@@ -794,6 +767,7 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
     char *estadoHum = obtenerEstadoPorTipo(medicion->humedad, 70.0f, 5);
     printf("\n- Humedad: %.2f %% | Estado: %s%s%s [Rango Seguro: 40%% - 70%%]\n",
            medicion->humedad, obtenerColorPorEstado(estadoHum), estadoHum, "\033[0m");
+           
     if (strcmp(estadoHum, "Normal") != 0)
     {
         if (medicion->humedad > 70.0f)
@@ -809,35 +783,35 @@ void mostrarDetalleAlertasZona(char *zonaNombre)
 
 void mostrarAlertas()
 {
+    char nombreZona[50];
+     int indiceZona;
     if (cantidadZonas == 0)
     {
         printf("\033[1;31mNo hay zonas registradas para evaluar alertas.\033[0m\n");
         return;
     }
-
     listarZonas();
     printf("\033[1;36mIngrese el nombre de la zona:\033[0m ");
-    char nombreZona[50];
     leerCadena(nombreZona, sizeof(nombreZona));
-    int indiceZona = buscarZonaPorNombre(nombreZona);
-
+    indiceZona = buscarZonaPorNombre(nombreZona);
     if (indiceZona == -1)
     {
         printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
         return;
     }
-
     if (obtenerMedicionActualPorZona(nombreZona) == NULL)
     {
         printf("\033[1;31mNo hay mediciones actuales registradas para %s para el dia actual. Ingrese una medicion nueva para evaluar alertas y recomendaciones.\033[0m\n", nombreZona);
         return;
     }
-
     mostrarDetalleAlertasZona(nombreZona);
 }
 
 void calcularPromedioHistorico()
 {
+    char nombreZona[50];
+    int indiceZona,cantidadPorZona = 0,limite = 0,contador = 0;
+    float promPm25 = 0.0, promNo2 = 0.0, promSo2 = 0.0, promCo2 = 0.0,promTemp = 0.0, promHum = 0.0, promViento = 0.0;
     if (cantidadMediciones == 0)
     {
         printf("\033[1;31mNo existen mediciones para calcular promedios.\033[0m\n");
@@ -845,21 +819,13 @@ void calcularPromedioHistorico()
     }
     listarZonas();
     printf("\n\033[1;36mIngrese el nombre de la zona:\033[0m ");
-    char nombreZona[50];
     leerCadena(nombreZona, sizeof(nombreZona));
-    int indiceZona = buscarZonaPorNombre(nombreZona);
-
+    indiceZona = buscarZonaPorNombre(nombreZona);
     if (indiceZona == -1)
     {
         printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
         return;
     }
-
-    int cantidadPorZona = 0;
-    int limite = 0;
-    float promPm25 = 0.0f, promNo2 = 0.0f, promSo2 = 0.0f, promCo2 = 0.0f;
-    float promTemp = 0.0f, promHum = 0.0f, promViento = 0.0f;
-
     for (int i = 0; i < cantidadMediciones; i++)
     {
         if (strcmp(mediciones[i].zonaNombre, nombreZona) == 0)
@@ -867,22 +833,17 @@ void calcularPromedioHistorico()
             cantidadPorZona++;
         }
     }
-
     if (cantidadPorZona == 0)
     {
         printf("\033[1;31mNo hay mediciones para esa zona.\033[0m\n");
         return;
     }
-
     if (cantidadPorZona < 30)
     {
         printf("\033[1;33mNo existen suficientes registros para calcular el promedio de los ultimos 30 dias.\033[0m\n");
         printf("Se utilizara la cantidad disponible: \033[1;36m%d\033[0m\n", cantidadPorZona);
     }
-
     limite = (cantidadPorZona < 30) ? cantidadPorZona : 30;
-    int contador = 0;
-
     for (int i = cantidadMediciones - 1; i >= 0 && contador < limite; i--)
     {
         if (strcmp(mediciones[i].zonaNombre, nombreZona) == 0)
@@ -897,7 +858,6 @@ void calcularPromedioHistorico()
             contador++;
         }
     }
-
     promPm25 /= contador;
     promNo2 /= contador;
     promSo2 /= contador;
@@ -905,7 +865,6 @@ void calcularPromedioHistorico()
     promTemp /= contador;
     promHum /= contador;
     promViento /= contador;
-
     printf("\n\033[1;34mPromedio historico de la zona %s (Ultimos %d dias)\033[0m\n", nombreZona, contador);
     printf("\033[1;36m%-18s %-10s %-12s\033[0m\n", "Variable/Elemento", "Promedio", "Estado");
     printf("---------------------------------------------------\n");
@@ -940,7 +899,7 @@ int contarAlertasEnMedicion(Medicion *medicion)
 
 void mostrarReporte()
 {
-    int dias,hayDatosActuales = 0,cantidadAlertas;
+    int dias, hayDatosActuales = 0, cantidadAlertas;
     if (cantidadZonas == 0)
     {
         printf("\033[1;31mNo hay zonas registradas para generar un reporte.\033[0m\n");
@@ -1075,6 +1034,7 @@ void generarBaseDatosMock()
 
 void cerrarDia()
 {
+    int opc;
     if (cantidadActuales == 0)
     {
         printf("\n\033[1;33m[INFO]\033[0m No hay mediciones actuales registradas el dia de hoy para cerrar.\n");
@@ -1083,8 +1043,8 @@ void cerrarDia()
     printf("\n\033[1;36m¿Esta seguro que desea Cerrar el Dia?\033[0m\n");
     printf("Esto tomara todas las mediciones actuales, las guardara en el historial y preparara el sistema para manana.\n");
     printf("(1=Si / 2=No): ");
-    int opcion = validarEnteroConRango(1, 2);
-    if (opcion == 2)
+    opc = validarEnteroConRango(1, 2);
+    if (opc == 2)
     {
         printf("\033[1;31mOperacion cancelada.\033[0m\n");
         return;
@@ -1098,7 +1058,6 @@ void cerrarDia()
             printf("\n\033[1;33m[ADVERTENCIA]\033[0m La base de datos historica esta llena. No se pudieron guardar todas las mediciones.\n");
             break;
         }
-
         strcpy(mediciones[cantidadMediciones].zonaNombre, medicionActual[i].zonaNombre);
         mediciones[cantidadMediciones].co2 = medicionActual[i].co2;
         mediciones[cantidadMediciones].so2 = medicionActual[i].so2;
@@ -1107,15 +1066,11 @@ void cerrarDia()
         mediciones[cantidadMediciones].temperatura = medicionActual[i].temperatura;
         mediciones[cantidadMediciones].humedad = medicionActual[i].humedad;
         mediciones[cantidadMediciones].velocidadViento = medicionActual[i].velocidadViento;
-
         cantidadMediciones++;
         procesadas++;
     }
-
     cantidadActuales = 0;
-
     guardarArchivos();
-
     printf("\033[1;32m[EXITO]\033[0m Se ha cerrado el dia correctamente. \033[1;36m%d\033[0m mediciones pasaron al historial.\n", procesadas);
     printf("El sistema ahora esta limpio y listo para registrar las mediciones de un nuevo dia.\n");
 }
