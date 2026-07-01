@@ -219,7 +219,7 @@ Medicion *obtenerMedicionParaOpcion(char *zonaNombre, int *usandoHistorico)
             *usandoHistorico = 0;
         return NULL;
     }
-    printf("\n\033[1;33mActualmente no se ha registrado medicion hoy.\n¿Quieres usar el PROMEDIO HISTORICO guardado (%d dias) para ejecutar esta opcion? (1=Si / 2=No):\033[0m ", dias);
+    printf("\n\033[1;33mActualmente no se ha registrado medicion hoy.\n¿Quieres usar el PROMEDIO HISTORICO guardado para ejecutar esta opcion? (1=Si / 2=No):\033[0m ");
     opc = validarEnteroConRango(1, 2);
     if (opc == 1)
     {
@@ -622,7 +622,7 @@ void eliminarZona()
         printf("\033[1;31mNo se encontro la zona indicada.\033[0m\n");
         return;
     }
-    printf("\n\033[1;31m[ADVERTENCIA PELIGROSA]\033[0m Estas a punto de eliminar la zona '%s'.\n", zonas[indiceZona].nombre);
+    printf("\n\033[1;31m[ADVERTENCIA]\033[0m Estas a punto de eliminar la zona '%s'.\n", zonas[indiceZona].nombre);
     printf("Esto borrara de forma permanente la zona y TODAS sus mediciones historicas y actuales.\n");
     printf("¿Estas totalmente seguro? (1=Si, borrar todo / 2=No, cancelar): ");
     opc = validarEnteroConRango(1, 2);
@@ -968,7 +968,7 @@ void calcularPromedioHistorico()
     promTemp /= contador;
     promHum /= contador;
     promViento /= contador;
-    printf("\n\033[1;34mPromedio historico de la zona %s (Ultimos %d dias)\033[0m\n", nombreZona, contador);
+    printf("\n\033[1;34mPromedio historico de la zona %s\033[0m\n", nombreZona);
     printf("\033[1;36m%-18s %-10s %-12s\033[0m\n", "Variable/Elemento", "Promedio", "Estado");
     printf("---------------------------------------------------\n");
     printf("%-18s %-10.2f %s%-12s%s\n", "PM2.5 (ug/m3)", promPm25, obtenerColorPorEstado(obtenerEstado(promPm25, LIMITE_PM25)), obtenerEstado(promPm25, LIMITE_PM25), "\033[0m");
