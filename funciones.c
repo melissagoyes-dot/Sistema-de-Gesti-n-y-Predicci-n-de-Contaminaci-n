@@ -31,12 +31,12 @@ int validarEnteroConRango(int a, int b)
 {
     int n;
     int aux;
+    int c;
     do
     {
         printf("\033[1;33m>> \033[0m");
         aux = scanf("%d", &n);
-        while ((getchar()) != '\n')
-            ;
+        while ((c = getchar()) != '\n' && c != EOF);
         if (aux != 1 || n < a || n > b)
         {
             printf("\033[1;31mEl valor ingresado es incorrecto\033[0m\n");
@@ -45,16 +45,16 @@ int validarEnteroConRango(int a, int b)
     return n;
 }
 
-float validarFloatConRango(int a, int b)
+float validarFloatConRango(float a, float b)
 {
     float n;
     int aux;
+    int c;
     do
     {
         printf("\033[1;33m>> \033[0m");
         aux = scanf("%f", &n);
-        while ((getchar()) != '\n')
-            ;
+        while ((c = getchar()) != '\n' && c != EOF);
         if (aux != 1 || n < a || n > b)
         {
             printf("\033[1;31mEl valor ingresado es incorrecto\033[0m\n");
@@ -239,7 +239,7 @@ void cargarArchivos()
     {
         if (fread(&cantidadZonas, sizeof(int), 1, archivoZonas) == 1)
         {
-            fread(zonas, sizeof(Zona), cantidadZonas, archivoZonas);
+            cantidadZonas = fread(zonas, sizeof(Zona), cantidadZonas, archivoZonas);
         }
         fclose(archivoZonas);
     }
@@ -252,7 +252,7 @@ void cargarArchivos()
     {
         if (fread(&cantidadMediciones, sizeof(int), 1, archivoMediciones) == 1)
         {
-            fread(mediciones, sizeof(Medicion), cantidadMediciones, archivoMediciones);
+            cantidadMediciones = fread(mediciones, sizeof(Medicion), cantidadMediciones, archivoMediciones);
         }
         fclose(archivoMediciones);
     }
@@ -395,8 +395,7 @@ void administrarZonas()
 void registrarZona()
 {
     char nombre[50];
-    int index, opc, valido;
-
+    int index, opc, valido,tieneLetra = 0;
     if (cantidadZonas >= MAX_ZONAS)
     {
         printf("\033[1;31mNo hay espacio para registrar mas zonas.\033[0m\n");
@@ -413,27 +412,35 @@ void registrarZona()
         }
         for (int i = 0; nombre[i] != '\0'; i++)
         {
-            if (!isalpha((unsigned char)nombre[i]) && nombre[i] != ' ') // isalpha verifica que sea una letra
+            if (isalpha((unsigned char)nombre[i])) 
+            {
+                tieneLetra = 1;
+            } 
+            else if (nombre[i] != ' ') 
             {
                 valido = 0;
                 break;
             }
         }
+        if (!tieneLetra) 
+        {
+            valido = 0;
+        }
         if (!valido)
         {
-            printf("\n\033[1;31mERROR: EL NOMBRE SOLO DEBE CONTENER LETRAS Y ESPACIOS. VUELVA A INTENTARLO.\033[0m\n");
+            printf("\n\033[1;31mERROR: EL NOMBRE SOLO DEBE CONTENER LETRAS Y ESPACIOS JUNTOS. VUELVA A INTENTARLO\033[0m\n");
             index = 0;
-        }else
+        }
+        else
         {
             convertirMinusculas(nombre);
             index = buscarZonaPorNombre(nombre);
         }
-        if (index != -1)
+        if (index != -1 && valido)
         {
             printf("\n\033[1;31mERROR: SE HA INGRESADO UN NOMBRE YA REGISTRADO ANTERIORMENTE, POR FAVOR VUELVA A INTENTARLO\033[0m\n");
         }
     } while (index != -1 || !valido);
-
     printf("\n\033[1;33mEl nombre de la nueva zona es: '%s'.\033[0m\n", nombre);
     printf("\033[1;31mDespues de que se guarde no vas a poder cambiar el nombre.\033[0m\n");
     printf("¿Deseas guardar esta nueva zona? (1=Si / 2=No): ");
@@ -749,10 +756,20 @@ void predecirContaminacion()
     }
     if (encontrados > 0)
     {
-        basePm25 = ((sumaPm25 / encontrados) * 0.6) + (medicion->pm25 * 0.4);
-        baseNo2 = ((sumaNo2 / encontrados) * 0.6) + (medicion->no2 * 0.4);
-        baseSo2 = ((sumaSo2 / encontrados) * 0.6) + (medicion->so2 * 0.4);
-        baseCo2 = ((sumaCo2 / encontrados) * 0.6) + (medicion->co2 * 0.4);
+        if (usandoHistorico == 1) 
+        {
+            basePm25 = ((sumaPm25 / encontrados) * 0.8) + (medicion->pm25 * 0.2);
+            baseNo2 = ((sumaNo2 / encontrados) * 0.8) + (medicion->no2 * 0.2);
+            baseSo2 = ((sumaSo2 / encontrados) * 0.8) + (medicion->so2 * 0.2);
+            baseCo2 = ((sumaCo2 / encontrados) * 0.8) + (medicion->co2 * 0.2);
+        } 
+        else 
+        {
+            basePm25 = ((sumaPm25 / encontrados) * 0.6) + (medicion->pm25 * 0.4);
+            baseNo2 = ((sumaNo2 / encontrados) * 0.6) + (medicion->no2 * 0.4);
+            baseSo2 = ((sumaSo2 / encontrados) * 0.6) + (medicion->so2 * 0.4);
+            baseCo2 = ((sumaCo2 / encontrados) * 0.6) + (medicion->co2 * 0.4);
+        }
     }
     predPm25 = basePm25 + (medicion->temperatura * 0.05) - (medicion->humedad * 0.01) + (10.0 - medicion->velocidadViento) * 0.08;
     predNo2 = baseNo2 + (medicion->temperatura * 0.03) + (10.0 - medicion->velocidadViento) * 0.05;
@@ -929,11 +946,6 @@ void calcularPromedioHistorico()
         printf("\033[1;31mNo hay mediciones para esa zona\033[0m\n");
         return;
     }
-    if (cantidadPorZona < 30)
-    {
-        printf("\033[1;33mNo existen suficientes registros para calcular el promedio de los ultimos 30 dias\033[0m\n");
-        printf("Se utilizara la cantidad disponible: \033[1;36m%d\033[0m\n", cantidadPorZona);
-    }
     limite = (cantidadPorZona < 30) ? cantidadPorZona : 30;
     for (int i = cantidadMediciones - 1; i >= 0 && contador < limite; i--)
     {
@@ -991,17 +1003,24 @@ int contarAlertasEnMedicion(Medicion *medicion)
 void mostrarReporte()
 {
     int dias, hayDatosActuales = 0, cantidadAlertas;
-    if (cantidadZonas == 0)
-    {
-        printf("\033[1;31mNo hay zonas registradas para generar un reporte\033[0m\n");
-        return;
-    }
-    FILE *reporte = fopen("reporte.txt", "w");
+    char nombreArchivo[50];
+    FILE *archivoPrueba;
+    int contadorReportes = 1; 
+    do {
+        sprintf(nombreArchivo, "reporte_%d.txt", contadorReportes);
+        archivoPrueba = fopen(nombreArchivo, "r");
+        if (archivoPrueba != NULL) {
+            fclose(archivoPrueba);
+            contadorReportes++;
+        }
+    } while (archivoPrueba != NULL);
+    FILE *reporte = fopen(nombreArchivo, "w");
     if (reporte == NULL)
     {
-        printf("\033[1;31mNo se pudo crear el archivo reporte\033[0m\n");
+        printf("\033[1;31mNo se pudo crear el archivo %s\033[0m\n", nombreArchivo);
         return;
     }
+    printf("\n\033[1;32m[INFO]\033[0m Generando reporte en el archivo: \033[1;36m%s\033[0m\n", nombreArchivo);
     fprintf(reporte, "\n===== TABLA 1: PROMEDIOS HISTORICOS (ULTIMOS 30 DIAS) =====\n");
     fprintf(reporte, "%-22s %-8s %-8s %-8s %-8s %-8s %-8s %-8s\n", "Zona", "CO2", "SO2", "NO2", "PM2.5", "Temp", "Hum", "Viento");
     fprintf(reporte, "----------------------------------------------------------------------------------------\n");
@@ -1045,7 +1064,7 @@ void mostrarReporte()
                    zonas[i].nombre, actual->co2, actual->so2, actual->no2, actual->pm25,
                    actual->temperatura, actual->humedad, actual->velocidadViento, cantidadAlertas);
         }
-    }
+    } 
     if (!hayDatosActuales)
     {
         fprintf(reporte, "No se han registrado mediciones el dia de hoy\n");
@@ -1128,7 +1147,7 @@ void generarBaseDatosMock()
 
 void cerrarDia()
 {
-    int opc,procesadas = 0;
+    int opc, procesadas = 0;
     if (cantidadActuales == 0)
     {
         printf("\n\033[1;33m[INFO]\033[0m No hay mediciones actuales registradas el dia de hoy para cerrar\n");
@@ -1143,14 +1162,14 @@ void cerrarDia()
         printf("\033[1;31mOperacion cancelada.\033[0m\n");
         return;
     }
+    if (cantidadMediciones + cantidadActuales > MAX_MEDICIONES)
+    {
+        printf("\n\033[1;31m[ERROR]\033[0m La base de datos historica no tiene espacio suficiente. No se pueden guardar las mediciones sin perder datos.\n");
+        return;
+    }
     printf("\n\033[1;34mIniciando cierre del dia...\033[0m\n");
     for (int i = 0; i < cantidadActuales; i++)
     {
-        if (cantidadMediciones >= MAX_MEDICIONES)
-        {
-            printf("\n\033[1;33m[ADVERTENCIA]\033[0m La base de datos historica esta llena. No se pudieron guardar todas las mediciones\n");
-            break;
-        }
         strcpy(mediciones[cantidadMediciones].zonaNombre, medicionActual[i].zonaNombre);
         mediciones[cantidadMediciones].co2 = medicionActual[i].co2;
         mediciones[cantidadMediciones].so2 = medicionActual[i].so2;

@@ -49,7 +49,7 @@ void leerCadena(char *cadena, int n);
 void limpiarSaltoDeLinea(char *cadena);
 void convertirMinusculas(char *cadena);
 int validarEnteroConRango(int a, int b);
-float validarFloatConRango(int a, int b);
+float validarFloatConRango(float a, float b);
 int buscarZonaPorNombre(char *nombre);
 int buscarMedicionPorZona(char *zonaNombre);
 int buscarMedicionActualPorZona(char *zonaNombre);
